@@ -1,0 +1,15 @@
+name: Parkour
+version: 1.0
+author: RicheeNektar
+description: parkour plugin
+api-version: 1.19
+
+main: org.Richee.Core
+
+commands:
+  course:
+    usage: <command> [help]
+    description: Main command
+    aliases:
+      - c
+      - parkour

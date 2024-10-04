@@ -1,0 +1,19 @@
+error: "Ein Fehler ist aufgetreten."
+player_only: "Nur im Spiel möglich."
+
+setup.help.usage: "setup <name>"
+setup.help: "Öffnet Konfiguration von einem Kurs"
+
+create.help.usage: "create <name>"
+create.help: "Erstellt einen neuen Kurs"
+create.success: "Kurs \"%s\" wurde erstellt."
+create.exists: "Kurs \"%s\" existiert bereits."
+create.error: "Beim erstellen des Kurses ist ein Fehler aufgetreten."
+
+delete.help.usage: "delete <name>"
+delete.help: "Entfernt einen Kurs"
+delete.success: "Kurs \"%s\" wurde gelöscht."
+delete.not_found: "Kurs \"%s\" konnte nicht gefunden werden."
+
+list.help.usage: "list"
+list.help: "Öffnet eine Liste an Kursen"

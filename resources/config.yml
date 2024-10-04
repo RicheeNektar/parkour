@@ -1,0 +1,7 @@
+language: de
+debug: false
+
+prefix:
+  info: "&7[&bParkour&7] &f"
+  warn: "&7[&6Parkour&7] &6"
+  error: "&7[&cParkour&7] &c"

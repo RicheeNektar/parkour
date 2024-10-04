@@ -1,0 +1,11 @@
+title: "%s - Konfiguration"
+save: "&rSpeichern"
+
+edit_spawn: "&rSpawnpunkt anpassen"
+edit_triggers: "&r&fTrigger anpassen"
+edit_boundaries: "&r&fBereich anpassen"
+
+is_ready: "&2Bespielbar"
+is_not_ready: "&cNicht bespielbar"
+
+error: "Beim öffnen der Einstellungen ist ein Fehler aufgetreten"

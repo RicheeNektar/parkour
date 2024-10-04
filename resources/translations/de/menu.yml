@@ -1,0 +1,7 @@
+course_list.title: "Kurse"
+
+pagination.page_indicator: "Seite %d / %d"
+pagination.next_page: "Nächste"
+pagination.previous_page: "Vorherige"
+
+generic.error: "Ein unbekannter Fehler ist aufgetreten!"
