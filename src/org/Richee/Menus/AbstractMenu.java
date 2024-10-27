@@ -1,7 +1,6 @@
 package org.Richee.Menus;
 
 import org.Richee.Core;
-import org.Richee.Severity;
 import org.Richee.Subscribers.InventoryClickSubscriber;
 import org.Richee.Translations.Translator;
 import org.bukkit.Bukkit;
@@ -12,16 +11,14 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.EventListener;
-import java.util.HashMap;
-import java.util.List;
-import java.util.function.Function;
+import java.util.*;
+import java.util.function.Consumer;
 
 public abstract class AbstractMenu implements EventListener, InventoryHolder {
     protected Player player;
 
     private Inventory inventory;
-    private final HashMap<Integer, Function<Player, Void>> callbacks = new HashMap<>();
+    private final HashMap<Integer, Consumer<Void>> consumers = new HashMap<>();
 
     private final String name;
     private final int size;
@@ -39,6 +36,8 @@ public abstract class AbstractMenu implements EventListener, InventoryHolder {
     }
 
     protected void build() {
+        getInventory().clear();
+
         for (var method : this.getClass().getDeclaredMethods()) {
             var annotations = method.getDeclaredAnnotationsByType(ItemAction.class);
 
@@ -49,39 +48,45 @@ public abstract class AbstractMenu implements EventListener, InventoryHolder {
                     annotation.slot(),
                     annotation.material(),
                     annotation.label(),
-                    player -> {
+                    ignored -> {
                         try {
-                            method.invoke(this, player);
+                            method.invoke(this);
                         } catch (IllegalAccessException | InvocationTargetException e) {
-                            player.sendMessage("menu.generic.error");
+                            player.sendMessage("generic.error");
                             Core.logException(e);
                         }
-                        return null;
                     }
                 );
             }
         }
     }
 
-    protected void addItem(int slot, Material material, String label) {
-        addItem(slot, material, label, null, new String[] {});
+    protected void addItem(int slot, Material material, String label, String lore, Consumer<Void> consumer) {
+        addItem(slot, material, label, lore == null ? null : lore.split("\n"), consumer);
     }
 
-    protected void addItem(int slot, Material material, String label, Function<Player, Void> callback) {
-        addItem(slot, material, label, callback, new String[] {});
+    protected void addItem(int slot, Material material, String label, Consumer<Void> consumer) {
+        addItem(slot, material, label, new String[0], consumer);
     }
 
-    protected void addItem(int slot, Material material, String label, Function<Player, Void> callback, String[] lore) {
+    protected void addItem(int slot, Material material, String label, String[] lore) {
+        addItem(slot, material, label, lore, null);
+    }
+
+    protected void addItem(int slot, Material material, String label, String[] lore, Consumer<Void> consumer) {
         var item = new ItemStack(material);
         var meta = item.getItemMeta();
         meta.setDisplayName(Translator.id(label));
+
+        if (lore != null && lore.length > 0) {
+            meta.setLore(Arrays.asList(lore));
+        }
+
         item.setItemMeta(meta);
-        meta.setLore(List.of(lore));
         getInventory().setItem(slot, item);
 
-        if (callback != null) {
-            Core.log(Severity.DEBUG, slot + label);
-            callbacks.put(slot, callback);
+        if (consumer != null) {
+            consumers.put(slot, consumer);
         }
     }
 
@@ -93,12 +98,12 @@ public abstract class AbstractMenu implements EventListener, InventoryHolder {
         return inventory;
     }
 
-    public void onInventoryClick(Player p, int slot) throws Exception {
-        if (callbacks.containsKey(slot)) {
-            var callback = callbacks.get(slot);
+    public void onInventoryClick(int slot) {
+        if (consumers.containsKey(slot)) {
+            var consumer = consumers.get(slot);
 
-            if (null != callback) {
-                callback.apply(p);
+            if (null != consumer) {
+                consumer.accept(null);
             }
         }
     }

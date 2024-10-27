@@ -14,6 +14,17 @@ delete.help.usage: "delete <name>"
 delete.help: "Entfernt einen Kurs"
 delete.success: "Kurs \"%s\" wurde gelöscht."
 delete.not_found: "Kurs \"%s\" konnte nicht gefunden werden."
+delete.error: "Beim löschen von \"\" ist ein Fehler aufgetreten."
+
+join.help.usage: "join <name>"
+join.help: "Spiele einen Kurs"
+join.not_found: "Kurs \"%s\" konnte nicht gefunden werden."
+join.not_ready: "Kurs \"%s\" ist nicht bespielbar."
+join.in_course: "Du bist bereits in einem Kurs."
+
+leave.help.usage: "leave"
+leave.help: "Verlasse deinen aktuellen Kurs"
+leave.not_in_course: "Du birst derzeit in keinem Kurs."
 
 list.help.usage: "list"
 list.help: "Öffnet eine Liste an Kursen"

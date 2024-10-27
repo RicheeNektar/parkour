@@ -1,7 +1,7 @@
 package org.Richee.Commands;
 
 import org.Richee.Core;
-import org.Richee.Severity;
+import org.Richee.Prefix;
 import org.Richee.Translations.Translator;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -9,21 +9,31 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 
 public class CourseCommandHandler implements CommandExecutor {
-    private final HashMap<String, Method> methods = new HashMap<>();
+    private final HashMap<String, Method> commands = new HashMap<>();
+    private final HashMap<String, ArrayList<String>> aliases = new HashMap<>();
 
     public CourseCommandHandler() {
         for (var c : new Class<?>[] {
-            ManagementCommand.class
+            ManagementCommand.class,
+            PlayCommand.class
         }) {
             for (var method : c.getDeclaredMethods()) {
                 var annotation = method.getAnnotation(SubCommandExecutor.class);
 
                 if (annotation != null) {
-                    methods.put(annotation.name(), method);
+                    var cmd = annotation.name();
+                    commands.put(cmd, method);
+
+                    for (String alias : annotation.alias()) {
+                        var list = aliases.containsKey(cmd) ? aliases.get(cmd) : new ArrayList<String>();
+                        list.add(alias);
+                        aliases.put(cmd, list);
+                    }
                 }
             }
         }
@@ -36,7 +46,7 @@ public class CourseCommandHandler implements CommandExecutor {
         }
 
         if (!(sender instanceof Player)) {
-            sender.sendMessage(Translator.id(Severity.ERROR, "command.player_only"));
+            sender.sendMessage(Translator.id(Prefix.ERROR, "command.player_only"));
             return true;
         }
 
@@ -46,49 +56,66 @@ public class CourseCommandHandler implements CommandExecutor {
         }
 
         var subCommand = args[0];
-        if (!methods.containsKey(subCommand)) {
+        if (!commands.containsKey(subCommand)) {
             sender.sendMessage(BuildHelp());
             return true;
         }
 
-        var method = methods.get(subCommand);
+        var method = commands.get(subCommand);
         var params = Arrays.copyOfRange(args, 1, args.length);
 
         try {
             method.invoke(null, sender, params);
 
-        } catch (ArrayIndexOutOfBoundsException e) {
-            sender.sendMessage(BuildHelp(subCommand));
+        } catch (InvocationTargetException e) {
+            if (e.getCause() instanceof ArrayIndexOutOfBoundsException) {
+                sender.sendMessage(BuildHelp(subCommand));
+            } else {
+                sender.sendMessage(Translator.id(Prefix.ERROR, "command.error"));
+                Core.logException(e);
+            }
 
         } catch (Exception e) {
-            sender.sendMessage(Translator.id(Severity.ERROR, "command.error"));
+            sender.sendMessage(Translator.id(Prefix.ERROR, "command.error"));
             Core.logException(e);
         }
 
         return true;
     }
 
-    private String BuildHelp() {
-        return BuildHelp("\\w+");
+    private String BuildHelp(String command) {
+        var help = new StringBuilder()
+            .append("&c")
+            .append("/course ")
+            .append(Translator.id("command." + command + ".help.usage"))
+            .append("&b")
+            .append(" - ")
+            .append("&f")
+            .append(Translator.id("command." + command + ".help"))
+            .append("\n");
+
+        var aliases = this.aliases.get(command);
+        if (aliases != null) {
+            StringBuilder tmp = new StringBuilder("Aliases: /course <");
+
+            for (var alias : aliases) {
+                tmp.append(alias).append("/");
+            }
+
+            help.append(tmp, 0, tmp.length() - 1)
+                .append(">\n");
+        }
+
+        return ChatColor.translateAlternateColorCodes('&', help.toString());
     }
 
-    private String BuildHelp(String subCommand) {
-        String[] commands = Translator.ids("^command\\." + subCommand + "\\.help$");
+    private String BuildHelp() {
         StringBuilder help = new StringBuilder();
 
         help.append("&7========[ &bParkour Help &7]============\n");
 
-        for (String command : commands) {
-            String cmdLabel = "/course " + Translator.id(Severity.DEBUG, command + ".usage");
-            String cmdDesc = Translator.id(Severity.DEBUG, command);
-
-            help.append("&c")
-                .append(cmdLabel)
-                .append("&b")
-                .append(" - ")
-                .append("&f")
-                .append(cmdDesc)
-                .append('\n');
+        for (var cmd : commands.keySet()) {
+            help.append(BuildHelp(cmd));
         }
 
         help.append("&7==================================");

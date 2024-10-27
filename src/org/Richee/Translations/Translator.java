@@ -1,7 +1,7 @@
 package org.Richee.Translations;
 
 import org.Richee.Core;
-import org.Richee.Severity;
+import org.Richee.Prefix;
 import org.bukkit.ChatColor;
 
 import java.io.BufferedReader;
@@ -9,21 +9,20 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.jar.JarFile;
-import java.util.regex.Matcher;
+import java.util.logging.Level;
 import java.util.regex.Pattern;
 
 public class Translator {
-    private static final Pattern translationPattern = Pattern.compile("((?:\\w\\.?)+): \"(.+)\"");
+    private static final Pattern translationPattern = Pattern.compile("^((?:\\w\\.?)+): (\"(.+)\"|\\|)");
+    private static final Pattern appendPattern = Pattern.compile("^ {2}(.*)");
     private static final Pattern filePattern = Pattern.compile("translations/\\w{2}/((?:\\w+/?)+)\\.ya?ml");
 
     private static HashMap<String, String> translations;
 
     public static void LoadTranslations(String langId) throws IOException, URISyntaxException {
-        Core.log(Severity.NONE, "Loading translation \"" + langId + "\"");
+        Core.log(Level.INFO, "Loading translation \"" + langId + "\"");
 
         translations = new HashMap<>();
 
@@ -31,54 +30,78 @@ public class Translator {
         var entries = jar.entries();
 
         while (entries.hasMoreElements()) {
-            var s = entries.nextElement().getName();
-            var fileMatch = filePattern.matcher(s);
+            var fileName = entries.nextElement().getName();
+            var fileMatch = filePattern.matcher(fileName);
 
             if (fileMatch.matches()) {
                 var reader = new BufferedReader(new InputStreamReader(
-                    Translator.class.getResourceAsStream("/" + s)
+                    Translator.class.getResourceAsStream("/" + fileName)
                 ));
 
-                String line;
+                var append = false;
+                String line, key = null, value = null;
+
                 while ((line = reader.readLine()) != null) {
                     if (!line.startsWith("#")) {
-                        Matcher translationMatch = translationPattern.matcher(line);
+                        if (append) {
+                            var appendMatcher = appendPattern.matcher(line);
+
+                            if (appendMatcher.matches()) {
+                                value += appendMatcher.group(1) + "\n";
+
+                            } else {
+                                Core.log(Level.FINE, key + ": " + value.replace("\n", "<br/>"));
+                                translations.put(key, value);
+                                append = false;
+                            }
+                        }
+
+                        var translationMatch = translationPattern.matcher(line);
 
                         if (translationMatch.matches()) {
-                            var key = fileMatch.group(1).replace('/', '.') + "." + translationMatch.group(1);
-                            Core.log(Severity.DEBUG, key);
-                            translations.put(key, translationMatch.group(2));
+                            if (translationMatch.group(2).equals("|")) {
+                                key = fileMatch.group(1).replace('/', '.') + "." + translationMatch.group(1);
+                                value = "";
+                                append = true;
+                            } else {
+                                key = fileMatch.group(1).replace('/', '.') + "." + translationMatch.group(1);
+                                value = translationMatch.group(3);
+                                Core.log(Level.FINE, key + ": " + value);
+                                translations.put(
+                                    key,
+                                    value
+                                );
+                            }
                         }
                     }
                 }
-            }
-        }
-    }
 
-    public static String[] ids(String regex) {
-        Pattern pattern = Pattern.compile(regex);
-        List<String> ids = new ArrayList<>();
-
-        for (String key : translations.keySet()) {
-            if (pattern.matcher(key).matches()) {
-                ids.add(key);
+                // Handle end of file, when last line was appending
+                if (!translations.containsKey(key)) {
+                    translations.put(key, value);
+                }
             }
         }
 
-        return ids.toArray(new String[] {});
+        jar.close();
     }
 
     public static String id(String id, Object... params) {
-        return id(Severity.NONE, id, params);
+        return id(Prefix.NONE, id, params);
     }
 
-    public static String id(Severity severity, String id, Object... params) {
-        if (translations != null && translations.containsKey(id)) {
-            String text = String.format(translations.get(id), params);
-            String prefix = Core.getPrefix(severity);
-            return ChatColor.translateAlternateColorCodes('&', (prefix + text).replace("\\",""));
-        }
-
-        return Core.getPrefix(severity) + id;
+    public static String id(Prefix prefix, String id, Object... params) {
+        return ChatColor.translateAlternateColorCodes(
+            '&',
+            (
+                prefix
+                + (
+                    translations != null && translations.containsKey(id)
+                        ? String.format(translations.get(id), params)
+                        : id
+                )
+            )
+            .replace("\\","")
+        );
     }
 }

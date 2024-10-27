@@ -8,26 +8,49 @@ public class Course implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final String name;
-    private CourseConfig courseConfig = new CourseConfig();
+    private final CourseConfig config;
 
     public Course(String name) {
+        this(name, new CourseConfig());
+    }
+
+    public Course(String name, CourseConfig config) {
         this.name = name;
+        this.config = config;
     }
 
-    public CourseConfig getConfig() throws CloneNotSupportedException {
-        return courseConfig.clone();
+    public String name() {
+        return name;
     }
 
-    public void setConfig(CourseConfig config) throws CloneNotSupportedException {
-        this.courseConfig = config.clone();
+    public CourseConfig config() {
+        return this.config;
     }
 
     public boolean isReady() {
-        return courseConfig.getArea() != null && courseConfig.getArea().length == 2 && courseConfig.getSpawn() != null;
+        return this.config.validate().length == 0;
+    }
+
+    public boolean isTest() {
+        return this instanceof TestCourse;
     }
 
     @Override
     public String toString() {
-        return this.name;
+        return name();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (!(o instanceof Course course)) {
+            return false;
+        }
+
+        return this.name.equals(course.name)
+            && this.config.equals(course.config);
     }
 }

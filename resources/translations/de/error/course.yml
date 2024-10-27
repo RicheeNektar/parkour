@@ -1,0 +1,7 @@
+spawn.null: "Kein Spawnpunkt gesetzt"
+spawn.world_null: "Welt des Spawnpunkt nicht gefunden"
+
+area.null: "Kein Bereich festgelegt"
+area.world_null: "Welt des Bereichs nicht gefunden"
+
+already_playing: "Du bist bereits in einem Kurs"

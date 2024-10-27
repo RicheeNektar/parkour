@@ -1,9 +1,18 @@
 title: "%s - Konfiguration"
-save: "&rSpeichern"
+save: "Speichern"
 
-edit_spawn: "&rSpawnpunkt anpassen"
-edit_triggers: "&r&fTrigger anpassen"
-edit_boundaries: "&r&fBereich anpassen"
+triggers.edit: "Trigger anpassen"
+
+area.edit: "Bereich anpassen"
+area.lore: |
+  %s
+  %.0f, %.0f, %.0f
+  %.0f, %.0f, %.0f
+
+spawn.edit: "Spawnpunkt anpassen"
+spawn.lore: |
+  %s
+  %.0f, %.0f, %.0f
 
 is_ready: "&2Bespielbar"
 is_not_ready: "&cNicht bespielbar"

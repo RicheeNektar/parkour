@@ -1,0 +1,8 @@
+course:
+  config:
+    max_fails: Automatically kicks player from course on X deaths/fails
+    max_joins: Limits the amount the player can play this course
+    max_wins: Restricts the player from entering the course if he completed it X times
+
+  triggers:
+    multi_trigger: Triggers multiple add.yml (sortable)

@@ -1,101 +1,154 @@
 package org.Richee.Menus;
 
-import org.Richee.CourseIO;
-import org.Richee.Exceptions.Validation.WorldMismatchLocationException;
-import org.Richee.Interactions.LocationInteraction;
+import org.Richee.Core;
+import org.Richee.Events.PlayerJoinCourseEvent;
+import org.Richee.IO;
+import org.Richee.Models.Area;
+import org.Richee.Models.Interactions.LocationInteraction;
 import org.Richee.Models.Course;
 import org.Richee.Models.CourseConfig;
+import org.Richee.Models.TestCourse;
+import org.Richee.Prefix;
 import org.Richee.Translations.Translator;
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
+
+import java.io.IOException;
+import java.util.Arrays;
 
 public class CourseSetup extends AbstractMenu {
-    private final Course course;
-    private final CourseConfig config;
+    private Course course;
+    private CourseConfig config;
 
     private final static int SLOT_SPAWN_POINT = 0;
     private final static int SLOT_BOUNDARIES = 1;
     private final static int SLOT_SAVE = 3;
+    private final static int SLOT_TEST = 4;
     private final static int SLOT_IS_READY = 5;
     private final static int SLOT_TRIGGERS = 8;
 
-    public CourseSetup(Course course) throws CloneNotSupportedException {
-        super(Translator.id("menu.course_setup.title", course.toString()), 18);
+    public CourseSetup(Course course) {
+        this(course, course.config().clone());
+    }
+
+    public CourseSetup(Course course, CourseConfig config) {
+        super(Translator.id("menu.course_setup.title", course.name()), 18);
         this.course = course;
-        this.config = course.getConfig();
+        this.config = config;
     }
 
     @Override
     public void build() {
         super.build();
 
+        var errors = config.validate();
+        var isReady = errors.length == 0;
+
         this.addItem(
             SLOT_IS_READY,
-            course.isReady() ? Material.REDSTONE : Material.GLOWSTONE_DUST,
-            "menu.course_setup." + (course.isReady() ? "is_ready" : "is_not_ready")
+                isReady ? Material.REDSTONE : Material.GLOWSTONE_DUST,
+            "menu.course_setup." + (isReady ? "is_ready" : "is_not_ready"),
+            errors
         );
 
+        var spawn = config.getSpawn();
+        var spawnInvalid = spawn == null || spawn.getWorld() == null;
         this.addItem(
             SLOT_SPAWN_POINT,
-            config.getSpawn() == null ? Material.ENDER_PEARL : Material.ENDER_EYE,
-            "menu.course_setup.edit_spawn",
-            player -> {
+            spawnInvalid ? Material.ENDER_PEARL : Material.ENDER_EYE,
+            "menu.course_setup.spawn.edit",
+            !spawnInvalid
+                ? Translator.id("menu.course_setup.spawn.lore", spawn.getWorld().getName(), spawn.x, spawn.y, spawn.z)
+                : null,
+            ignored -> {
                 player.closeInventory();
 
-                new LocationInteraction(player, Translator.id("prompt.location", "Spawnpoint"), spawn -> {
-                    config.setSpawn(spawn);
+                new LocationInteraction(player, Translator.id("prompt.location", "Spawnpoint"), location -> {
+                    config = new CourseConfig(
+                        location,
+                        config.getArea(),
+                        Arrays.asList(config.getTriggers())
+                    );
                     open(player);
-
-                    return null;
                 });
-                return null;
-            },
-            new String[] {
-                config.getSpawn().world,
-                STR."\{config.getSpawn().x}, \\{config.getSpawn().y}, \\{config.getSpawn().z}",
             }
         );
 
-
+        var area = config.getArea();
+        var areaInvalid = area == null || area.pos1().getWorld() == null;
         this.addItem(
             SLOT_BOUNDARIES,
-            config.getSpawn() == null ? Material.BARRIER : Material.ENDER_EYE,
-            "menu.course_setup.edit_area",
-            player -> {
+            areaInvalid
+                ? Material.BARRIER
+                : Material.ENDER_EYE,
+            "menu.course_setup.area.edit",
+            !areaInvalid
+                ? Translator.id("menu.course_setup.area.lore", area.pos1().getWorld().getName(), area.pos1().x, area.pos1().y, area.pos1().z, area.pos2().x, area.pos2().y, area.pos2().z)
+                : null,
+            ignored -> {
                 player.closeInventory();
 
-                new LocationInteraction(player, Translator.id("prompt.location", "Position 1"), pos1 -> {
-                    new LocationInteraction(player, Translator.id("prompt.location", "Position 2"), pos2 -> {
-                        try {
-                            config.setArea(pos1, pos2);
-                        } catch (WorldMismatchLocationException e) {
-                            player.sendMessage(Translator.id("prompt.location.world_mismatch"));
-                        }
+                new LocationInteraction(
+                    player,
+                    Translator.id("prompt.location", "Position 1"),
+                    pos1 -> new LocationInteraction(
+                        player,
+                        Translator.id("prompt.location", "Position 2"),
+                        pos2 -> {
+                            if (!pos1.getWorld().getUID().equals(pos2.getWorld().getUID())) {
+                                player.sendMessage(Translator.id("prompt.location.world_mismatch"));
+                            } else {
+                                config = new CourseConfig(
+                                    config.getSpawn(),
+                                    new Area(pos1, pos2),
+                                    Arrays.asList(config.getTriggers())
+                                );
+                            }
 
-                        open(player);
-                        return null;
-                    });
-                    return null;
-                });
-                return null;
-            },
-            new String[] {
-                config.getSpawn().world,
-                STR."\{config.getSpawn().x}, \\{config.getSpawn().y}, \\{config.getSpawn().z}",
+                            open(player);
+                        }
+                    )
+                );
+            }
+        );
+
+        this.addItem(
+            SLOT_SAVE,
+            this.course.config().equals(this.config) ? Material.BOOK : Material.WRITABLE_BOOK,
+            "menu.course_setup.save",
+            ignored -> {
+                this.course = new Course(course.name(), config);
+                try {
+                    IO.save(course);
+                } catch (IOException e) {
+                    player.sendMessage(Translator.id(Prefix.ERROR, "generic.error"));
+                    Core.logException(e);
+                }
+                open(player); // Refresh
+            }
+        );
+
+        this.addItem(
+            SLOT_TEST,
+            Material.REDSTONE_TORCH,
+            "menu.course_setup.test",
+            ignored -> {
+                var course = new TestCourse(this.course.name(), this.config);
+                try {
+                    IO.save(course);
+                } catch (IOException e) {
+                    Core.logException(e);
+                    // Not too important
+                }
+                Core.publishEvent(new PlayerJoinCourseEvent(player, course, true));
+                player.closeInventory();
             }
         );
 
         // @todo: Block actions
     }
 
-    @ItemAction(slot = SLOT_SAVE, material = Material.WRITABLE_BOOK, label = "menu.course_setup.save")
-    public void save() throws Exception {
-        course.setConfig(config);
-        CourseIO.save(course);
-    }
-
-    @ItemAction(slot = SLOT_TRIGGERS, material = Material.COMMAND_BLOCK, label = "menu.course_setup.edit_triggers")
-    public void editTriggers(Player player) {
-        player.sendMessage("Not implemented yet");
+    @ItemAction(slot = SLOT_TRIGGERS, material = Material.COMMAND_BLOCK, label = "menu.course_setup.triggers.edit")
+    public void editTriggers() {
+        new TriggerMenu(this.course, this.config.getTriggers()).open(player);
     }
 }

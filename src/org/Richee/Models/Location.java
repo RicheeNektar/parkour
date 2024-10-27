@@ -1,6 +1,5 @@
 package org.Richee.Models;
 
-import org.Richee.Exceptions.Validation.WorldMismatchLocationException;
 import org.bukkit.Bukkit;
 
 import java.io.Serial;
@@ -36,41 +35,66 @@ public class Location implements Serializable, Cloneable {
         this.yaw = location.getYaw();
     }
 
-    public static Location[] toArea(Location pos1, Location pos2) throws WorldMismatchLocationException {
-        if (pos1.world.equals(pos2.world)) {
-            throw new WorldMismatchLocationException();
-        }
-
-        return new Location[] {
-            new Location(
-                Math.min(pos1.x, pos2.x),
-                Math.min(pos1.y, pos2.y),
-                Math.min(pos1.z, pos2.z),
-                0,
-                0,
-                pos1.world
-            ),
-            new Location(
-                Math.max(pos1.x, pos2.x),
-                Math.max(pos1.y, pos2.y),
-                Math.max(pos1.z, pos2.z),
-                0,
-                0,
-                pos1.world
-            ),
-        };
+    public org.bukkit.Location toLocation() {
+        return new org.bukkit.Location(getWorld(), x, y, z, yaw, pitch);
     }
 
-    public org.bukkit.Location toLocation() {
-        return new org.bukkit.Location(Bukkit.getWorld(UUID.fromString(this.world)), x, y, z, yaw, pitch);
+    public org.bukkit.World getWorld() {
+        return Bukkit.getWorld(UUID.fromString(this.world));
+    }
+
+    public Location below() {
+        return new Location(
+            this.x,
+            this.y - 1,
+            this.z,
+            this.pitch,
+            this.yaw,
+            this.world
+        );
+    }
+
+    public boolean greater(Location other) {
+        return this.x >= other.x
+            && this.y >= other.y
+            && this.z >= other.z;
+    }
+
+    public boolean lower(Location other) {
+        return this.x <= other.x
+            && this.y <= other.y
+            && this.z <= other.z;
+    }
+
+    public boolean in(Area area) {
+        return this.greater(area.pos1())
+            && this.lower(area.pos2());
     }
 
     @Override
     public Location clone() {
         try {
             return (Location) super.clone();
-        } catch (CloneNotSupportedException ex) {
-            throw new AssertionError();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e); // Should never happen
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+
+        if (!(o instanceof Location location)) {
+            return false;
+        }
+
+        return this.world.equals(location.world)
+            && this.x == location.x
+            && this.y == location.y
+            && this.z == location.z
+            && this.pitch == location.pitch
+            && this.yaw == location.yaw;
     }
 }

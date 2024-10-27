@@ -1,10 +1,10 @@
 package org.Richee.Commands;
 
 import org.Richee.Core;
-import org.Richee.CourseIO;
+import org.Richee.IO;
 import org.Richee.Models.Course;
 import org.Richee.Menus.CourseList;
-import org.Richee.Severity;
+import org.Richee.Prefix;
 import org.Richee.Translations.Translator;
 import org.bukkit.entity.Player;
 
@@ -14,42 +14,47 @@ public class ManagementCommand {
     @SubCommandExecutor(name = "create")
     public static void onCreate(Player player, String[] args) {
         var name = args[0];
+
+        if (IO.getCourse(name) != null) {
+            player.sendMessage(Translator.id(Prefix.INFO, "command.create.exists", name));
+            return;
+        }
+
         var course = new Course(name);
 
         try {
-            CourseIO.save(course);
+            IO.save(course);
 
         } catch (IOException e) {
-            player.sendMessage(Translator.id(Severity.INFO, "command.create.error", name));
+            player.sendMessage(Translator.id(Prefix.INFO, "command.create.error", name));
             Core.logException(e);
             return;
         }
 
-        CourseIO.courses.add(course);
-        player.sendMessage(Translator.id(Severity.INFO, "command.create.success", name));
+        player.sendMessage(Translator.id(Prefix.INFO, "command.create.success", name));
     }
 
     @SubCommandExecutor(name = "delete")
     public static void onDelete(Player player, String[] args) {
         var name = args[0];
 
-        for (int i = 0; i < CourseIO.courses.size(); i++) {
-            if (name.equals(CourseIO.courses.get(i).toString())) {
-                CourseIO.courses.remove(i);
-
-                player.sendMessage(Translator.id(Severity.INFO, "command.delete.success", name));
-                return;
+        try {
+            if (IO.deleteCourse(name)) {
+                player.sendMessage(Translator.id(Prefix.INFO, "command.delete.success", name));
+            } else {
+                player.sendMessage(Translator.id(Prefix.ERROR, "command.delete.not_found", name));
             }
+        } catch (IOException e) {
+            player.sendMessage(Translator.id(Prefix.ERROR, "command.delete.error", name));
+            Core.logException(e);
         }
-
-        player.sendMessage(Translator.id(Severity.ERROR, "command.delete.not_found", name));
     }
 
     @SubCommandExecutor(name = "list")
     public static void onList(Player player, String[] args) {
         new CourseList(
             Translator.id("menu.course_list.title"),
-            CourseIO.courses.toArray(new Course[0])
+            IO.getCourses()
         ).open(player);
     }
 }
