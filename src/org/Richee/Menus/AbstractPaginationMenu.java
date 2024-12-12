@@ -3,8 +3,6 @@ package org.Richee.Menus;
 import org.Richee.Translations.Translator;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,14 +56,11 @@ public abstract class AbstractPaginationMenu<T> extends AbstractMenu {
     protected void build() {
         super.build();
 
-        var inv = getInventory();
         var pageSize = rows * 9;
         var totalPages = objects.size() / pageSize;
         var page = Math.min(totalPages, Math.max(currentPage, 0));
 
-        ItemMeta meta;
-
-        if ( page > 1 ) {
+        if (page > 1) {
             this.addItem(
                 pageSize,
                 Material.ARROW,
@@ -74,14 +69,13 @@ public abstract class AbstractPaginationMenu<T> extends AbstractMenu {
             );
         }
 
-        var pageIndicator = new ItemStack(Material.COMPASS);
-        meta = pageIndicator.getItemMeta();
-        meta.setDisplayName(Translator.id("menu.pagination.page_indicator", page, totalPages));
-        pageIndicator.setItemMeta(meta);
+        this.addItem(
+            pageSize + 4,
+            Material.COMPASS,
+            Translator.id("menu.pagination.page_indicator", page, totalPages)
+        );
 
-        inv.setItem(pageSize + 4, pageIndicator);
-
-        if ( page < totalPages ) {
+        if (page < totalPages) {
             this.addItem(
                 pageSize + 8,
                 Material.ARROW,

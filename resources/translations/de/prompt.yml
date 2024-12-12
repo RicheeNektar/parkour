@@ -1,2 +1,3 @@
-location: "Right click to set %s"
-location.world_mismatch: "Locations are not in the same world"
+location: "Punch or interact with an item/block to set %s"
+
+area.world_mismatch: "Locations are not in the same world"

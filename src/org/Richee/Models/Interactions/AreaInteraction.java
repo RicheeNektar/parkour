@@ -6,17 +6,16 @@ import org.Richee.Subscribers.PlayerInteractSubscriber;
 import org.Richee.Translations.Translator;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 
 import java.util.function.Consumer;
 
-public class AreaInteraction extends AbstractInteraction<Area, PlayerInteractEvent> {
+public class AreaInteraction extends AbstractInteraction<Area> {
     private Location pos1;
 
     public AreaInteraction(Player p, Consumer<Area> consumer) {
-        super(p, Translator.id("prompt.location", "Position 1"), consumer, PlayerInteractEvent.class);
+        super(p, "Position 1", consumer);
     }
 
     @Override
@@ -43,10 +42,20 @@ public class AreaInteraction extends AbstractInteraction<Area, PlayerInteractEve
     protected Area getValue(PlayerInteractEvent event) {
         event.setCancelled(true);
 
-        var location = switch (event.getAction()) {
-            case RIGHT_CLICK_AIR, LEFT_CLICK_AIR -> new Location(p.getLocation());
-            case RIGHT_CLICK_BLOCK, LEFT_CLICK_BLOCK -> new Location(event.getClickedBlock().getLocation());
-            default -> throw new IllegalStateException();
+        Location location;
+        switch (event.getAction()) {
+            case RIGHT_CLICK_AIR, LEFT_CLICK_AIR:
+                location = new Location(p.getLocation());
+                break;
+            case RIGHT_CLICK_BLOCK, LEFT_CLICK_BLOCK:
+                var loc = event.getClickedBlock().getLocation();
+                location = pos1 == null
+                    ? new Location(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), 0, 0, loc.getWorld().getUID().toString())
+                    : new Location(loc.getBlockX() + 1, loc.getBlockY() + 1, loc.getBlockZ() + 1, 0, 0, loc.getWorld().getUID().toString())
+                ;
+                break;
+            default:
+                throw new IllegalStateException();
         };
 
         if (pos1 == null) {
@@ -56,7 +65,7 @@ public class AreaInteraction extends AbstractInteraction<Area, PlayerInteractEve
         }
 
         if (!pos1.getWorld().equals(location.getWorld())) {
-            p.sendMessage(Translator.id("prompt.location.world_mismatch"));
+            p.sendMessage(Translator.id("prompt.area.world_mismatch"));
             return null;
         }
 

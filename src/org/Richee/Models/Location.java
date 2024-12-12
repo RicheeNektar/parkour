@@ -11,11 +11,11 @@ public class Location implements Serializable, Cloneable {
     @Serial
     private static final long serialVersionUID = 2L;
 
-    public final double x, y, z;
+    public final float x, y, z;
     public final float pitch, yaw;
     public final String world;
 
-    public Location(double x, double y, double z, float pitch, float yaw, String world) {
+    public Location(float x, float y, float z, float pitch, float yaw, String world) {
         this.x = x;
         this.y = y;
         this.z = z;
@@ -27,9 +27,9 @@ public class Location implements Serializable, Cloneable {
     public Location(org.bukkit.Location location) {
         this.world = Objects.requireNonNull(location.getWorld()).getUID().toString();
 
-        this.x = location.getX();
-        this.y = location.getY();
-        this.z = location.getZ();
+        this.x = (float) location.getX();
+        this.y = (float) location.getY();
+        this.z = (float) location.getZ();
 
         this.pitch = location.getPitch();
         this.yaw = location.getYaw();
@@ -67,7 +67,8 @@ public class Location implements Serializable, Cloneable {
     }
 
     public boolean in(Area area) {
-        return this.greater(area.pos1())
+        return getWorld() == area.pos1().getWorld()
+            && this.greater(area.pos1())
             && this.lower(area.pos2());
     }
 

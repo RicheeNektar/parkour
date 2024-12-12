@@ -5,7 +5,7 @@ import org.bukkit.entity.Player;
 
 public class PlayerLeaveCourseEvent extends AbstractEvent {
     public enum Reason {
-        WIN, MAX_DEATHS_REACHED, PLAYER_DECISION, SHUTDOWN;
+        WIN, MAX_DEATHS_REACHED, PLAYER_DECISION, SHUTDOWN, ERROR;
     }
 
     private final Player player;

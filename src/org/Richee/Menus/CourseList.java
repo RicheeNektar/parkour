@@ -1,11 +1,12 @@
 package org.Richee.Menus;
 
 import org.Richee.Models.Course;
+import org.Richee.Translations.Translator;
 import org.bukkit.Material;
 
 public class CourseList extends AbstractPaginationMenu<Course> {
-    public CourseList(String title, Course[] courses) {
-        super(title, courses);
+    public CourseList(Course[] courses) {
+        super(Translator.id("menu.course.list.title"), courses);
     }
 
     @Override

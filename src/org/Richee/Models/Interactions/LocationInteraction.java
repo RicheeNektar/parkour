@@ -8,9 +8,9 @@ import org.bukkit.inventory.EquipmentSlot;
 
 import java.util.function.Consumer;
 
-public class LocationInteraction extends AbstractInteraction<Location, PlayerInteractEvent> {
-    public LocationInteraction(Player p, String promptMessage, Consumer<Location> consumer) {
-        super(p, promptMessage, consumer, PlayerInteractEvent.class);
+public class LocationInteraction extends AbstractInteraction<Location> {
+    public LocationInteraction(Player p, String valueName, Consumer<Location> consumer) {
+        super(p, valueName, consumer);
     }
 
     @Override

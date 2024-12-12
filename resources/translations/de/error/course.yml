@@ -1,7 +1,11 @@
 spawn.null: "Kein Spawnpunkt gesetzt"
 spawn.world_null: "Welt des Spawnpunkt nicht gefunden"
+spawn.out_of_bounds: "Der Spawn befindet sich nicht im Kurs-Bereich"
 
 area.null: "Kein Bereich festgelegt"
 area.world_null: "Welt des Bereichs nicht gefunden"
 
+trigger.out_of_bounds: "Ein Trigger befindet sich nicht im Kurs-Bereich"
+
 already_playing: "Du bist bereits in einem Kurs"
+no_end: "Der Kurs hat noch kein Win-Trigger"

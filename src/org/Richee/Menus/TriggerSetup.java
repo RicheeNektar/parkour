@@ -1,10 +1,8 @@
 package org.Richee.Menus;
 
 import org.Richee.Core;
-import org.Richee.Models.Area;
 import org.Richee.Models.Course;
 import org.Richee.Models.CourseConfig;
-import org.Richee.Models.Interactions.AreaInteraction;
 import org.Richee.Models.Triggers.AbstractTrigger;
 import org.Richee.Translations.Translator;
 import org.bukkit.Material;
@@ -12,19 +10,13 @@ import org.bukkit.Material;
 import java.util.ArrayList;
 import java.util.logging.Level;
 
-public class TriggerMenu extends AbstractPaginationMenu<AbstractTrigger> {
+public class TriggerSetup extends AbstractPaginationMenu<AbstractTrigger> {
     private boolean deleteMode = false;
     private final Course course;
-    private CourseConfig config;
 
-    public TriggerMenu(Course course, AbstractTrigger[] objects) {
-        this(course, objects, 2);
-    }
-
-    public TriggerMenu(Course course, AbstractTrigger[] objects, int rows) {
-        super(Translator.id("menu.trigger.title", course.name()), objects, rows);
+    public TriggerSetup(Course course, AbstractTrigger[] objects) {
+        super(Translator.id("menu.trigger.setup.title", course.name()), objects, 2);
         this.course = course;
-        this.config = course.config();
     }
 
     @Override
@@ -35,21 +27,15 @@ public class TriggerMenu extends AbstractPaginationMenu<AbstractTrigger> {
         addItem(
             9 * 2 + 2,
             Material.STONE_BUTTON,
-            "menu.trigger.add",
+            "menu.trigger.setup.add",
             ignored -> new TriggerSelect() {
                 @Override
                 public void callback(AbstractTrigger trigger) {
-                player.closeInventory();
-                new AreaInteraction(player, area -> {
-                    try {
-                        parent.objects.add(
-                            trigger.getClass().getConstructor(Area.class).newInstance(area)
-                        );
+                    player.closeInventory();
+                    trigger.setup(player, () -> {
+                        parent.objects.add(trigger);
                         parent.reopen();
-                    } catch (Exception e) {
-                        throw new RuntimeException(e); // Should never happen
-                    }
-                });
+                    });
                 }
             }.open(this.player)
         );
@@ -57,12 +43,12 @@ public class TriggerMenu extends AbstractPaginationMenu<AbstractTrigger> {
         addItem(
             9 * 2,
             Material.ARROW,
-            "menu.trigger.back",
+            "menu.trigger.setup.back",
             ignored -> new CourseSetup(
                 this.course,
                 new CourseConfig(
-                    config.getSpawn(),
-                    config.getArea(),
+                    course.config().getSpawn(),
+                    course.config().getArea(),
                     new ArrayList<>(this.objects)
                 )
             ).open(this.player)
@@ -71,7 +57,7 @@ public class TriggerMenu extends AbstractPaginationMenu<AbstractTrigger> {
         addItem(
             9 * 2 + 6,
             deleteMode ? Material.BARRIER : Material.GUNPOWDER,
-            deleteMode ? "menu.trigger.delete.on" : "menu.trigger.delete.off",
+            deleteMode ? "menu.trigger.setup.delete.on" : "menu.trigger.setup.delete.off",
             ignored -> {
                 deleteMode = !deleteMode;
                 reopen();
@@ -96,6 +82,18 @@ public class TriggerMenu extends AbstractPaginationMenu<AbstractTrigger> {
 
     @Override
     public String getLoreForObject(AbstractTrigger trigger) {
-        return trigger.getLore();
+        var pos1 = trigger.area.pos1();
+        var pos2 = trigger.area.pos2();
+
+        return Translator.id(
+            "menu.trigger.setup.lore",
+            pos1.getWorld().getName(),
+            pos1.x,
+            pos1.y,
+            pos1.z,
+            pos2.x,
+            pos2.y,
+            pos2.z
+        );
     }
 }

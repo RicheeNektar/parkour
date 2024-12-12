@@ -2,11 +2,14 @@ package org.Richee;
 
 import org.Richee.Commands.CourseCommandHandler;
 import org.Richee.Events.PlayerLeaveCourseEvent;
+import org.Richee.IO.Courses;
+import org.Richee.IO.Players;
 import org.Richee.Subscribers.*;
 import org.Richee.Translations.Translator;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.Event;
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -31,25 +34,25 @@ public class Core extends JavaPlugin {
     public void onLoad() {
         super.onLoad();
 
-        saveConfig();
-
         Core.description = getDescription();
-        Core.logger = getLogger();
-        Core.config = getConfig();
-
         Core.console = getServer().getConsoleSender();
+        Core.config = getConfig();
+        Core.logger = getLogger();
+
+        config.options().copyDefaults(true);
+        saveConfig();
 
         try {
             Translator.LoadTranslations(config.getString("language"));
         } catch (IOException | URISyntaxException e) {
-            log(Level.SEVERE, "load.translations.error");
+            log(Level.SEVERE, "load.error.translations");
             logException(e);
         }
 
         try {
-            IO.loadAllCourses();
+            Courses.loadAllCourses();
         } catch (IOException e) {
-            log(Level.SEVERE, "load.courses.error");
+            log(Level.SEVERE, "load.error.courses");
             logException(e);
         }
     }
@@ -62,23 +65,29 @@ public class Core extends JavaPlugin {
         server.getPluginCommand("course").setExecutor(new CourseCommandHandler());
 
         pluginManager = server.getPluginManager();
-        pluginManager.registerEvents(new InventoryClickSubscriber(), this);
-        pluginManager.registerEvents(new PlayerInteractSubscriber(), this);
-        pluginManager.registerEvents(new PlayerCourseSubscriber(), this);
-        pluginManager.registerEvents(new PlayerMoveSubscriber(), this);
-        pluginManager.registerEvents(new PlayerQuitSubscriber(), this);
+
+        for (var handler : new Listener[] {
+            new InventoryClickSubscriber(),
+            new PlayerInteractSubscriber(),
+            new PlayerJoinCourseSubscriber(),
+            new PlayerLeaveCourseSubscriber(),
+            new PlayerFailedSubscriber(),
+            new PlayerMoveSubscriber(),
+            new PlayerQuitSubscriber(),
+        }) {
+            pluginManager.registerEvents(handler, this);
+        }
     }
 
     @Override
     public void onDisable() {
         super.onDisable();
         for (var p : getServer().getOnlinePlayers()) {
-            var name = DataContainer.getCourseFromPlayer(p);
-            Core.log(Level.FINE, name);
+            var name = Players.getCourseFromPlayer(p);
             if (null != name) {
-                var c = IO.getCourse(name);
+                var c = Courses.getCourse(name);
                 if (null == c) {
-                    DataContainer.setCourseForPlayer(p, null);
+                    Players.setCourseForPlayer(p, null);
                     p.saveData();
                 } else {
                     Core.publishEvent(new PlayerLeaveCourseEvent(p, c, PlayerLeaveCourseEvent.Reason.SHUTDOWN));

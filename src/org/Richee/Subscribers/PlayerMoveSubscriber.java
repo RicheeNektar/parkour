@@ -1,9 +1,9 @@
 package org.Richee.Subscribers;
 
 import org.Richee.Core;
-import org.Richee.DataContainer;
 import org.Richee.Events.PlayerFailedEvent;
-import org.Richee.IO;
+import org.Richee.IO.Courses;
+import org.Richee.IO.Players;
 import org.Richee.Models.Location;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -15,12 +15,8 @@ public class PlayerMoveSubscriber implements Listener {
     @EventHandler
     public void onPlayerMoveEvent(PlayerMoveEvent event) {
         var player = event.getPlayer();
-        var name = DataContainer.getCourseFromPlayer(player);
-        if (name == null) {
-            return;
-        }
 
-        var course = IO.getCourse(name);
+        var course = Courses.getCourse(Players.getCourseFromPlayer(player));
         if (course == null) {
             return;
         }
@@ -40,13 +36,13 @@ public class PlayerMoveSubscriber implements Listener {
             return;
         }
 
+        // @todo block actions
+        // playerPos.below().toLocation().getBlock();
+
         for (var trigger : config.getTriggers()) {
             if (playerPos.in(trigger.area)) {
                 trigger.trigger(player, course);
             }
         }
-
-        // @todo block actions
-        playerPos.below().toLocation().getBlock();
     }
 }

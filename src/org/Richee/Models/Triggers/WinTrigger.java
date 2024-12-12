@@ -2,15 +2,15 @@ package org.Richee.Models.Triggers;
 
 import org.Richee.Core;
 import org.Richee.Events.PlayerLeaveCourseEvent;
-import org.Richee.Models.Area;
 import org.Richee.Models.Course;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
+import java.io.Serial;
+
 public class WinTrigger extends AbstractTrigger {
-    public WinTrigger(Area area) {
-        super(area);
-    }
+    @Serial
+    private static final long serialVersionUID = 0L;
 
     @Override
     public void trigger(Player player, Course course) {

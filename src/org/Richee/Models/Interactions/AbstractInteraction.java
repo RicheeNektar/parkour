@@ -1,46 +1,35 @@
 package org.Richee.Models.Interactions;
 
 import org.Richee.Subscribers.PlayerInteractSubscriber;
+import org.Richee.Translations.Translator;
 import org.bukkit.entity.Player;
-import org.bukkit.event.player.PlayerEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 
 import java.util.function.Consumer;
 
-public abstract class AbstractInteraction<T, E extends PlayerEvent> {
+public abstract class AbstractInteraction<T> {
     private final Consumer<T> consumer;
-    private final Class<E> eClass;
 
     protected final Player p;
 
-    @SuppressWarnings("unchecked")
-    public AbstractInteraction(Player p, String promptMessage, Consumer<T> consumer, Class<E> eClass) {
+    public AbstractInteraction(Player p, String promptMessage, Consumer<T> consumer) {
         this.consumer = consumer;
-        this.eClass = eClass;
         this.p = p;
 
-        PlayerInteractSubscriber.registerInteraction(p, (AbstractInteraction<?, PlayerEvent>) this);
-        p.sendMessage(promptMessage);
+        PlayerInteractSubscriber.registerInteraction(p, this);
+        p.sendMessage(Translator.id("prompt.location", promptMessage));
     }
 
-    @SuppressWarnings("unchecked")
-    public E cast(PlayerEvent event) {
-        if (this.eClass.isInstance(event)) {
-            return (E) event;
-        }
-        return null;
-    }
-
-    public void onInteract(E event) {
+    public void onInteract(PlayerInteractEvent event) {
         this.consumer.accept(this.getValue(event));
     }
 
-    public abstract boolean supports(E event);
+    public abstract boolean supports(PlayerInteractEvent event);
 
-    protected abstract T getValue(E event);
+    protected abstract T getValue(PlayerInteractEvent event);
 
-    @SuppressWarnings("unchecked")
-    protected AbstractInteraction<?, PlayerEvent> self()
+    protected AbstractInteraction<?> self()
     {
-        return (AbstractInteraction<?, PlayerEvent>) this;
+        return this;
     }
 }

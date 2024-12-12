@@ -12,17 +12,17 @@ public class Area implements Serializable, Cloneable {
 
     public Area(Location pos1, Location pos2) {
         this.pos1 = new Location(
-            Math.floor(Math.min(pos1.x, pos2.x)),
-            Math.floor(Math.min(pos1.y, pos2.y)),
-            Math.floor(Math.min(pos1.z, pos2.z)),
+            (float) Math.floor(Math.min(pos1.x, pos2.x)),
+            (float) Math.floor(Math.min(pos1.y, pos2.y)),
+            (float) Math.floor(Math.min(pos1.z, pos2.z)),
             0,
             0,
             pos1.world
         );
         this.pos2 = new Location(
-            Math.ceil(Math.max(pos1.x, pos2.x)),
-            Math.ceil(Math.max(pos1.y, pos2.y)),
-            Math.ceil(Math.max(pos1.z, pos2.z)),
+            (float) Math.ceil(Math.max(pos1.x, pos2.x)),
+            (float) Math.ceil(Math.max(pos1.y, pos2.y)),
+            (float) Math.ceil(Math.max(pos1.z, pos2.z)),
             0,
             0,
             pos1.world

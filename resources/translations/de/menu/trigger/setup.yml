@@ -1,0 +1,12 @@
+title: "Trigger für %s"
+
+add: "Trigger erstellen"
+save: "Trigger speichern"
+
+delete.on: "Löschmodus: &can"
+delete.off: "Löschmodus: &aaus"
+
+lore: |
+  %s
+  %.0f, %.0f, %.0f
+  %.0f, %.0f, %.0f

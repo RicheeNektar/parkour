@@ -1,6 +1,7 @@
 package org.Richee.Models;
 
 import org.Richee.Models.Triggers.AbstractTrigger;
+import org.Richee.Models.Triggers.WinTrigger;
 import org.Richee.Translations.Translator;
 
 import java.io.Serial;
@@ -50,14 +51,39 @@ public class CourseConfig implements Serializable, Cloneable {
 
         if (spawn == null) {
             errors.add(Translator.id("error.course.spawn.null"));
+
         } else if (spawn.getWorld() == null) {
             errors.add(Translator.id("error.course.spawn.world_null"));
         }
 
         if (area == null) {
-            errors.add(Translator.id("error.course.spawn.null"));
+            errors.add(Translator.id("error.course.area.null"));
+
         } else if (area.pos1().getWorld() == null) {
-            errors.add(Translator.id("error.course.spawn.world_null"));
+            errors.add(Translator.id("error.course.area.world_null"));
+
+        } else {
+            if (!spawn.in(area)) {
+                errors.add(Translator.id("error.course.spawn.out_of_bounds"));
+            }
+
+            var hasAtLeastOneWinTrigger = false;
+
+            for (var trigger : triggers) {
+                if (!(
+                    trigger.area.pos1().in(area)
+                    && trigger.area.pos2().in(area)
+                )) {
+                    errors.add(Translator.id("error.course.trigger.out_of_bounds"));
+                }
+                if (trigger instanceof WinTrigger) {
+                    hasAtLeastOneWinTrigger = true;
+                }
+            }
+
+            if (!hasAtLeastOneWinTrigger) {
+                errors.add(Translator.id("error.course.no_end"));
+            }
         }
 
         return errors.toArray(new String[0]);
@@ -68,8 +94,14 @@ public class CourseConfig implements Serializable, Cloneable {
         try {
             CourseConfig c = (CourseConfig) super.clone();
 
-            c.spawn = this.spawn.clone();
-            c.area = this.area.clone();
+            if (null != this.spawn) {
+                c.spawn = this.spawn.clone();
+            }
+
+            if (null != this.area) {
+                c.area = this.area.clone();
+            }
+
             c.triggers = new ArrayList<>(c.triggers);
 
             return c;
@@ -89,7 +121,7 @@ public class CourseConfig implements Serializable, Cloneable {
         }
 
         return Objects.equals(this.getSpawn(), config.getSpawn())
-                && Objects.equals(this.getArea(), config.getArea())
-                && Objects.deepEquals(this.getTriggers(), config.getTriggers());
+            && Objects.equals(this.getArea(), config.getArea())
+            && Objects.deepEquals(this.getTriggers(), config.getTriggers());
     }
 }

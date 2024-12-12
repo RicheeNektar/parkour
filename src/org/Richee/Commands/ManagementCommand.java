@@ -1,9 +1,9 @@
 package org.Richee.Commands;
 
 import org.Richee.Core;
-import org.Richee.IO;
-import org.Richee.Models.Course;
+import org.Richee.IO.Courses;
 import org.Richee.Menus.CourseList;
+import org.Richee.Models.Course;
 import org.Richee.Prefix;
 import org.Richee.Translations.Translator;
 import org.bukkit.entity.Player;
@@ -15,7 +15,7 @@ public class ManagementCommand {
     public static void onCreate(Player player, String[] args) {
         var name = args[0];
 
-        if (IO.getCourse(name) != null) {
+        if (Courses.getCourse(name) != null) {
             player.sendMessage(Translator.id(Prefix.INFO, "command.create.exists", name));
             return;
         }
@@ -23,7 +23,7 @@ public class ManagementCommand {
         var course = new Course(name);
 
         try {
-            IO.save(course);
+            Courses.save(course);
 
         } catch (IOException e) {
             player.sendMessage(Translator.id(Prefix.INFO, "command.create.error", name));
@@ -39,7 +39,7 @@ public class ManagementCommand {
         var name = args[0];
 
         try {
-            if (IO.deleteCourse(name)) {
+            if (Courses.deleteCourse(name)) {
                 player.sendMessage(Translator.id(Prefix.INFO, "command.delete.success", name));
             } else {
                 player.sendMessage(Translator.id(Prefix.ERROR, "command.delete.not_found", name));
@@ -52,9 +52,6 @@ public class ManagementCommand {
 
     @SubCommandExecutor(name = "list")
     public static void onList(Player player, String[] args) {
-        new CourseList(
-            Translator.id("menu.course_list.title"),
-            IO.getCourses()
-        ).open(player);
+        new CourseList(Courses.getCourses()).open(player);
     }
 }

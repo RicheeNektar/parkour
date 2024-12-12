@@ -2,6 +2,7 @@ package org.Richee.Models.Triggers;
 
 import org.Richee.Models.Area;
 import org.Richee.Models.Course;
+import org.Richee.Models.Interactions.AreaInteraction;
 import org.Richee.Translations.Translator;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -10,10 +11,6 @@ import java.io.Serializable;
 
 public abstract class AbstractTrigger implements Serializable, Cloneable {
     public Area area;
-
-    public AbstractTrigger(Area area) {
-        this.area = area;
-    }
 
     @Override
     public AbstractTrigger clone() {
@@ -26,22 +23,16 @@ public abstract class AbstractTrigger implements Serializable, Cloneable {
         }
     }
 
-    @Override
-    public String toString() {
-        return Translator.id("menu.trigger." + getName());
+    public void setup(Player player, Runnable callback) {
+        new AreaInteraction(player, area -> {
+            this.area = area;
+            callback.run();
+        });
     }
 
-    public String getLore() {
-        return Translator.id(
-            "menu.trigger.lore",
-            area.pos1().getWorld().getName(),
-            area.pos1().x,
-            area.pos1().y,
-            area.pos1().z,
-            area.pos2().x,
-            area.pos2().y,
-            area.pos2().z
-        );
+    @Override
+    public String toString() {
+        return Translator.id("trigger." + getName());
     }
 
     public abstract Material getIcon();

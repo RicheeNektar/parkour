@@ -4,6 +4,7 @@ import org.Richee.Core;
 import org.Richee.Subscribers.InventoryClickSubscriber;
 import org.Richee.Translations.Translator;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -11,7 +12,9 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.EventListener;
+import java.util.HashMap;
 import java.util.function.Consumer;
 
 public abstract class AbstractMenu implements EventListener, InventoryHolder {
@@ -73,10 +76,15 @@ public abstract class AbstractMenu implements EventListener, InventoryHolder {
         addItem(slot, material, label, lore, null);
     }
 
+    protected void addItem(int slot, Material material, String label) {
+        addItem(slot, material, label, new String[0], null);
+
+    }
+
     protected void addItem(int slot, Material material, String label, String[] lore, Consumer<Void> consumer) {
         var item = new ItemStack(material);
         var meta = item.getItemMeta();
-        meta.setDisplayName(Translator.id(label));
+        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&r&f" + Translator.id(label)));
 
         if (lore != null && lore.length > 0) {
             meta.setLore(Arrays.asList(lore));

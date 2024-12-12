@@ -11,7 +11,9 @@ import org.bukkit.entity.Player;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 
 public class CourseCommandHandler implements CommandExecutor {
     private final HashMap<String, Method> commands = new HashMap<>();

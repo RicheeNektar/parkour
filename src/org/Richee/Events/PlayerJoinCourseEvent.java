@@ -6,12 +6,10 @@ import org.bukkit.entity.Player;
 public class PlayerJoinCourseEvent extends AbstractEvent {
     private final Player player;
     private final Course course;
-    private final boolean isTesting;
 
-    public PlayerJoinCourseEvent(Player player, Course course, boolean isTesting) {
+    public PlayerJoinCourseEvent(Player player, Course course) {
         this.player = player;
         this.course = course;
-        this.isTesting = isTesting;
     }
 
     public Player getPlayer() {
@@ -20,9 +18,5 @@ public class PlayerJoinCourseEvent extends AbstractEvent {
 
     public Course getCourse() {
         return course;
-    }
-
-    public boolean isTesting() {
-        return isTesting;
     }
 }

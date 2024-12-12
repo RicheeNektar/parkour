@@ -2,11 +2,11 @@ package org.Richee.Menus;
 
 import org.Richee.Core;
 import org.Richee.Events.PlayerJoinCourseEvent;
-import org.Richee.IO;
+import org.Richee.IO.Courses;
 import org.Richee.Models.Area;
-import org.Richee.Models.Interactions.LocationInteraction;
 import org.Richee.Models.Course;
 import org.Richee.Models.CourseConfig;
+import org.Richee.Models.Interactions.LocationInteraction;
 import org.Richee.Models.TestCourse;
 import org.Richee.Prefix;
 import org.Richee.Translations.Translator;
@@ -31,7 +31,7 @@ public class CourseSetup extends AbstractMenu {
     }
 
     public CourseSetup(Course course, CourseConfig config) {
-        super(Translator.id("menu.course_setup.title", course.name()), 18);
+        super(Translator.id("menu.course.setup.title", course.name()), 18);
         this.course = course;
         this.config = config;
     }
@@ -45,8 +45,8 @@ public class CourseSetup extends AbstractMenu {
 
         this.addItem(
             SLOT_IS_READY,
-                isReady ? Material.REDSTONE : Material.GLOWSTONE_DUST,
-            "menu.course_setup." + (isReady ? "is_ready" : "is_not_ready"),
+            isReady ? Material.GLOWSTONE_DUST : Material.REDSTONE,
+            "menu.course.setup." + (isReady ? "is_ready" : "is_not_ready"),
             errors
         );
 
@@ -54,10 +54,10 @@ public class CourseSetup extends AbstractMenu {
         var spawnInvalid = spawn == null || spawn.getWorld() == null;
         this.addItem(
             SLOT_SPAWN_POINT,
-            spawnInvalid ? Material.ENDER_PEARL : Material.ENDER_EYE,
-            "menu.course_setup.spawn.edit",
+            Material.RED_BED,
+            "menu.course.setup.spawn.edit",
             !spawnInvalid
-                ? Translator.id("menu.course_setup.spawn.lore", spawn.getWorld().getName(), spawn.x, spawn.y, spawn.z)
+                ? Translator.id("menu.course.setup.spawn.lore", spawn.getWorld().getName(), spawn.x, spawn.y, spawn.z)
                 : null,
             ignored -> {
                 player.closeInventory();
@@ -77,12 +77,10 @@ public class CourseSetup extends AbstractMenu {
         var areaInvalid = area == null || area.pos1().getWorld() == null;
         this.addItem(
             SLOT_BOUNDARIES,
-            areaInvalid
-                ? Material.BARRIER
-                : Material.ENDER_EYE,
-            "menu.course_setup.area.edit",
+            Material.BARRIER,
+            "menu.course.setup.area.edit",
             !areaInvalid
-                ? Translator.id("menu.course_setup.area.lore", area.pos1().getWorld().getName(), area.pos1().x, area.pos1().y, area.pos1().z, area.pos2().x, area.pos2().y, area.pos2().z)
+                ? Translator.id("menu.course.setup.area.lore", area.pos1().getWorld().getName(), area.pos1().x, area.pos1().y, area.pos1().z, area.pos2().x, area.pos2().y, area.pos2().z)
                 : null,
             ignored -> {
                 player.closeInventory();
@@ -114,11 +112,11 @@ public class CourseSetup extends AbstractMenu {
         this.addItem(
             SLOT_SAVE,
             this.course.config().equals(this.config) ? Material.BOOK : Material.WRITABLE_BOOK,
-            "menu.course_setup.save",
+            "menu.course.setup.save",
             ignored -> {
                 this.course = new Course(course.name(), config);
                 try {
-                    IO.save(course);
+                    Courses.save(course);
                 } catch (IOException e) {
                     player.sendMessage(Translator.id(Prefix.ERROR, "generic.error"));
                     Core.logException(e);
@@ -130,25 +128,25 @@ public class CourseSetup extends AbstractMenu {
         this.addItem(
             SLOT_TEST,
             Material.REDSTONE_TORCH,
-            "menu.course_setup.test",
+            "menu.course.setup.test",
             ignored -> {
                 var course = new TestCourse(this.course.name(), this.config);
                 try {
-                    IO.save(course);
+                    Courses.save(course);
                 } catch (IOException e) {
                     Core.logException(e);
                     // Not too important
                 }
-                Core.publishEvent(new PlayerJoinCourseEvent(player, course, true));
                 player.closeInventory();
+                Core.publishEvent(new PlayerJoinCourseEvent(player, course));
             }
         );
 
         // @todo: Block actions
     }
 
-    @ItemAction(slot = SLOT_TRIGGERS, material = Material.COMMAND_BLOCK, label = "menu.course_setup.triggers.edit")
+    @ItemAction(slot = SLOT_TRIGGERS, material = Material.COMMAND_BLOCK, label = "menu.course.setup.triggers.edit")
     public void editTriggers() {
-        new TriggerMenu(this.course, this.config.getTriggers()).open(player);
+        new TriggerSetup(this.course, this.config.getTriggers()).open(player);
     }
 }
